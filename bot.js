@@ -41,9 +41,9 @@ client.once('ready', async () => {
 
   setInterval(async () => {
     try {
-      const res = await fetch('https://worldtimeapi.org/api/timezone/America/Argentina/Buenos_Aires');
+      const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Argentina/Buenos_Aires');
       const data = await res.json();
-      const ahora = new Date(data.datetime);
+      const ahora = new Date(data.dateTime);
       const hora = ahora.toTimeString().slice(0,5);
       const dia = diasSemana[ahora.getDay()];
       const canal = await client.channels.fetch(CHANNEL_ID);
@@ -79,36 +79,41 @@ client.once('ready', async () => {
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
-  const res = await fetch('https://worldtimeapi.org/api/timezone/America/Argentina/Buenos_Aires');
-  const data = await res.json();
-  const ahora = new Date(data.datetime);
-  const dia = diasSemana[ahora.getDay()];
+  try {
+    const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Argentina/Buenos_Aires');
+    const data = await res.json();
+    const ahora = new Date(data.dateTime);
+    const dia = diasSemana[ahora.getDay()];
 
-  if (interaction.commandName === 'eventos') {
-    const proximos = eventos
-      .filter(e => e.dias.includes(dia))
-      .map(e => {
-        const [hh, mm] = e.hora.split(':').map(Number);
-        const eDate = new Date(ahora);
-        eDate.setHours(hh, mm, 0, 0);
-        const diff = Math.floor((eDate - ahora) / 60000);
-        return { ...e, restante: diff };
-      })
-      .filter(e => e.restante >= 0)
-      .sort((a, b) => a.restante - b.restante);
+    if (interaction.commandName === 'eventos') {
+      const proximos = eventos
+        .filter(e => e.dias.includes(dia))
+        .map(e => {
+          const [hh, mm] = e.hora.split(':').map(Number);
+          const eDate = new Date(ahora);
+          eDate.setHours(hh, mm, 0, 0);
+          const diff = Math.floor((eDate - ahora) / 60000);
+          return { ...e, restante: diff };
+        })
+        .filter(e => e.restante >= 0)
+        .sort((a, b) => a.restante - b.restante);
 
-    if (proximos.length === 0) return interaction.reply('No hay eventos hoy.');
-    const e = proximos[0];
-    const horas = Math.floor(e.restante / 60);
-    const minutos = e.restante % 60;
-    return interaction.reply(`⏳ Próximo evento **${e.nombre}** en ${horas}h ${minutos}m\n📍 ${e.ubicacion} — 🕒 ${e.hora}`);
-  }
+      if (proximos.length === 0) return interaction.reply('No hay eventos hoy.');
+      const e = proximos[0];
+      const horas = Math.floor(e.restante / 60);
+      const minutos = e.restante % 60;
+      return interaction.reply(`⏳ Próximo evento **${e.nombre}** en ${horas}h ${minutos}m\n📍 ${e.ubicacion} — 🕒 ${e.hora}`);
+    }
 
-  if (interaction.commandName === 'bosses') {
-    const minutosPasados = ahora.getMinutes() % 30;
-    const restante = 30 - minutosPasados;
-    const proximo = bosses[bossIndex % bosses.length];
-    return interaction.reply(`⏳ El próximo boss será **${proximo}** en ${restante} minutos.`);
+    if (interaction.commandName === 'bosses') {
+      const minutosPasados = ahora.getMinutes() % 30;
+      const restante = 30 - minutosPasados;
+      const proximo = bosses[bossIndex % bosses.length];
+      return interaction.reply(`⏳ El próximo boss será **${proximo}** en ${restante} minutos.`);
+    }
+  } catch (err) {
+    console.error('Error obteniendo hora para slash command:', err.message);
+    return interaction.reply('❌ No se pudo obtener la hora. Intenta más tarde.');
   }
 });
 
