@@ -1,0 +1,12 @@
+{
+  "name": "bot-eventos-king",
+  "version": "1.0.0",
+  "description": "Bot de Discord para eventos PvP y PvE con comandos separados.",
+  "main": "bot.js",
+  "scripts": { "start": "node bot.js" },
+  "dependencies": {
+    "discord.js": "^14.0.0",
+    "node-fetch": "^2.6.7",
+    "dotenv": "^16.0.0"
+  }
+}
